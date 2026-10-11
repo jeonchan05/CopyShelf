@@ -13,6 +13,11 @@ final class AppPreferences {
         set { defaults.set(!newValue, forKey: "recordingPaused") }
     }
 
+    var hasLaunched: Bool {
+        get { defaults.bool(forKey: "hasLaunched") }
+        set { defaults.set(newValue, forKey: "hasLaunched") }
+    }
+
     var hasSeenAutomaticRecording: Bool {
         get { defaults.bool(forKey: "hasSeenAutomaticRecording") }
         set { defaults.set(newValue, forKey: "hasSeenAutomaticRecording") }
