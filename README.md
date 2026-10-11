@@ -76,4 +76,4 @@ open -n dist/build/CopyShelf.app --args --demo
 
 The project uses AppKit and Carbon and has no third-party runtime dependencies. Automated tests use generated data and isolated storage. The repository excludes local logs, measurements, development notes, history files, and build output.
 
-[Publishing guide](docs/releasing.md) · [Security](SECURITY.md) · [MIT license](LICENSE)
+[Architecture](docs/architecture.md) · [Publishing guide](docs/releasing.md) · [Security](SECURITY.md) · [MIT license](LICENSE)
