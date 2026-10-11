@@ -1,0 +1,33 @@
+name: Build and test
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  macos:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Test clipboard history
+        run: swift test
+      - name: Test release safeguards
+        run: python3 -m unittest discover -s Tests/ReleaseTests -v
+      - name: Build for Apple Silicon and Intel
+        run: bash Scripts/build-app.sh --universal
+      - name: Package community beta
+        run: bash Scripts/package-release.sh
+      - name: Upload unsigned build
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: CopyShelf-unsigned-build
+          path: |
+            dist/CopyShelf-*-macOS-unsigned.zip
+            dist/CopyShelf-*-macOS-unsigned.zip.sha256
+            dist/CopyShelf-*-macOS-unsigned.dmg
+            dist/CopyShelf-*-macOS-unsigned.dmg.sha256
+          retention-days: 14

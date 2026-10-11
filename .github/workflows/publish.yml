@@ -1,0 +1,43 @@
+name: Publish community beta
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: community-release
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: macos-15
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Test
+        run: |
+          swift test
+          python3 -m unittest discover -s Tests/ReleaseTests -v
+      - name: Build universal app and packages
+        run: |
+          bash Scripts/build-app.sh --universal
+          bash Scripts/package-release.sh
+      - name: Publish a new unsigned beta
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version=$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+          tag="v$version"
+          [ -f "docs/release-notes-$version.md" ] || { echo 'Missing release notes.' >&2; exit 1; }
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo 'This release already exists; it will not be overwritten.' >&2
+            exit 1
+          fi
+          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --prerelease --title "CopyShelf $version" --notes-file "docs/release-notes-$version.md" \
+            "dist/CopyShelf-$version-macOS-unsigned.zip" "dist/CopyShelf-$version-macOS-unsigned.zip.sha256" \
+            "dist/CopyShelf-$version-macOS-unsigned.dmg" "dist/CopyShelf-$version-macOS-unsigned.dmg.sha256"
